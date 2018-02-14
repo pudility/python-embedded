@@ -20,9 +20,9 @@ def selectNewestDir(dirpattern):
 	return dirs[-1]
 
 if True: # iOS
-	DEVROOT = "/Developer/Platforms/iPhoneOS.platform/Developer"
+	DEVROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer"
 	#SDKROOT = DEVROOT + "/SDKs/iPhoneOS5.0.sdk"
-	SDKROOT = selectNewestDir("/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS*.sdk")
+	SDKROOT = selectNewestDir("/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS11.2.sdk")
 	assert os.path.exists(DEVROOT)
 	assert os.path.exists(SDKROOT)
 
@@ -30,13 +30,13 @@ if True: # iOS
 	# See https://github.com/albertz/playground/blob/master/test-int-cmp.c .
 	#CC = DEVROOT + "/usr/bin/arm-apple-darwin10-llvm-gcc-4.2"
 	#CC = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"
-	CC = "/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/cc"
-	LD = DEVROOT + "/usr/bin/ld"
+	CC = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"
+	LD = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld"
 	LIBTOOL = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/libtool"
 	assert os.path.exists(CC)
 	assert os.path.exists(LD)
 	assert os.path.exists(LIBTOOL)
-	
+
 	CFLAGS += [
 		"-isysroot", SDKROOT,
 		#"-I%s/usr/lib/gcc/arm-apple-darwin10/4.2.1/include/" % SDKROOT,
@@ -46,6 +46,7 @@ if True: # iOS
 		#"-no-cpp-precomp",
 		"-arch", "armv6",
 		"-arch", "armv7",
+		"-arch", "arm64",
 		"-miphoneos-version-min=4.3",
 		"-mthumb",
 		"-g",
@@ -66,8 +67,8 @@ if True: # iOS
 		#SDKROOT + "/usr/lib/crt1.o",
 		"-lgcc_s.1",
 		]
-	
-PythonDir = "CPython"
+
+PythonDir = "cpython"
 assert os.path.exists(PythonDir)
 
 from glob import glob as pyglob
@@ -115,7 +116,7 @@ modFiles = \
 	set(glob(PythonDir + "/Modules/_ctypes/**/*.c")) - \
 	set(glob(PythonDir + "/Modules/glmodule.c"))
 	# ...
-	
+
 # via whitelist
 # Add the init reference also to pyimportconfig.c.
 # For hacking builtin submodules, see pycryptoutils/cryptomodule.c.
@@ -202,7 +203,7 @@ def execCmd(cmd):
 	cmdFlat = " ".join(cmd)
 	print cmdFlat
 	return os.system(cmdFlat)
-	
+
 def compilePyFile(f, compileOpts):
 	ofile = os.path.splitext(os.path.basename(f))[0] + ".o"
 	try:
@@ -216,14 +217,14 @@ def compilePyFile(f, compileOpts):
 
 def compilePycryptoFile(fn):
 	return compilePyFile(fn, compilePycryptoOpts)
-	
+
 def compile():
 	ofiles = []
 	for f in list(baseFiles) + list(modFiles) + list(objFiels) + list(parserFiles):
 		ofiles += [compilePyFile(f, compileOpts)]
 	for f in list(pycryptoFiles):
 		ofiles += [compilePycryptoFile(f)]
-	
+
 	if buildExec:
 		execCmd([CC] + LDFLAGS + map(lambda f: "build/" + f, ofiles) + ["-o", "python"])
 	else:
@@ -242,7 +243,7 @@ def compile():
 				"libsasl2.a",
 				"libz.a",
 				]))
-		
+
 if __name__ == '__main__':
 	compile()
 
